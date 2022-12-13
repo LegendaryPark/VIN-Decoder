@@ -2,11 +2,10 @@ from sqlalchemy.orm import Session
 from server.models.vehicle import Vehicle
 from server.schemas.vehicle_schema import VehicleBase,VehicleAdd, VehicleDelete
 from server.app_config import appConfig
-from fastapi import HTTPException
 from server.db_config import engine
+from fastapi import WebSocket
 import requests, json
 import pandas as pd
-import socket
 
 async def get_vehicle_by_vin(db:Session, vin:str):
     
@@ -24,6 +23,7 @@ async def get_vehicle_by_vin(db:Session, vin:str):
                         model=fetched_vin_data['Model'], 
                         model_year=fetched_vin_data['Model Year'],
                         body_class=fetched_vin_data['Body Class'])
+        
         new_vin_data = __add_vehicle_data(db, vehicleAdd)
         new_vin_data.cached_result = False
         return new_vin_data
@@ -33,18 +33,15 @@ def delete_vehicle_by_vin(db:Session, vin:str):
     db.commit()
     return VehicleDelete(vin= vin, cached_delete_success= bool(delete_status))
 
-def export_database_cache(db:Session):
+async def export_database_cache(websocket: WebSocket):
     file_name = 'vehicle.parquet'
-    connected_socket = __connect_socket()
+    
     __export_sqlite_to_parquet_file(file_name)
-    
     parquet_file = open(file_name, 'rb')
-    try:
-        connected_socket.sendall(parquet_file.read())
-    finally:
-        connected_socket.close()
-        
     
+    await websocket.accept()
+    await websocket.send_bytes(parquet_file)
+    await websocket.close()
     
     
 # Private Methods
@@ -66,11 +63,6 @@ def __add_vehicle_data(db:Session, vehicleAdd:VehicleAdd):
     db.commit()
     db.refresh(new_vehicle)
     return new_vehicle
-
-def __connect_socket():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((appConfig.HOST, appConfig.PORT))
-    return sock
 
 def __export_sqlite_to_parquet_file(file_name:str):
     dataToParquet = pd.read_sql(f"SELECT * from {Vehicle.__tablename__ }", con=engine)
