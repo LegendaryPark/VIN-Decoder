@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from http import HTTPStatus
 from main import app
+import pytest
 
 vehicleClient =TestClient(app)
 
@@ -53,3 +54,17 @@ def test_failure_delete_vehicle_by_none_vin():
     vin = None
     response = vehicleClient.delete(f"/remove/{vin}")
     assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+    
+def test_success_export_database_cache_bytes():
+    with vehicleClient.websocket_connect("/export") as websocket:
+        assert websocket.receive_bytes() != None
+        
+def test_failure_export_database_cache_json():
+    with pytest.raises(Exception):
+        with vehicleClient.websocket_connect("/export") as websocket:
+            assert websocket.receive_json() != None
+        
+def test_failure_export_database_cache_text():
+    with pytest.raises(Exception):
+        with vehicleClient.websocket_connect("/export") as websocket:
+            assert websocket.receive_text() != None
