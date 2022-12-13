@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Column, String
 from server.db_config import Base
 
 class Vehicle(Base):
