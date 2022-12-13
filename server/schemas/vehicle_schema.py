@@ -1,9 +1,7 @@
-from typing import Optional
 from pydantic import BaseModel, constr
 
 class VehicleBase(BaseModel):
     vin: constr(min_length=17, max_length=17)
-    
     
     @staticmethod 
     def convert_array_to_dictionary(array_json):
@@ -21,6 +19,5 @@ class VehicleAdd(VehicleBase):
     model_year: str 
     body_class: str 
     
-
 class VehicleDelete(VehicleBase):
     cached_delete_success: bool
