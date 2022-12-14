@@ -63,6 +63,19 @@ def test_failure_delete_vehicle_by_none_vin(client):
     assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
     
 def test_success_export_database_cache_bytes(client):
+    vin = "2HGFA16538H523456"
+    response = client.get(f"/lookup/{vin}")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        'vin': '2HGFA16538H523456',
+        'make': 'HONDA',
+        'model_year': '2008',
+        'model': 'Civic',
+        'body_class': 'Sedan/Saloon',
+        'cached_result': False
+    }
+    assert response.status_code == HTTPStatus.OK
+    
     with client.websocket_connect("/export") as websocket:
         assert websocket.receive_bytes() != None
         
