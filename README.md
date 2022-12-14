@@ -37,6 +37,8 @@ You can either get vehicle information (and insert it if it's not already in the
 
 ## How to test
 
+NOTE: Before you run the test, make sure your app is still running!
+
 In your terminal, you can run
 
 ```
