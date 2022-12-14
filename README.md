@@ -45,7 +45,7 @@ $ pytest
 
 or
 
-You can also run the test in debug mode, please go to your debugging tool and run Python:PyTest
+You can also run the test in debug mode, please go to your debugging tool and run Python:PyTest.
 launch.json file has already been created in .vscode folder
 
 This is where you can test your Websocket!
