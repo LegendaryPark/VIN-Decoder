@@ -1,0 +1,5 @@
+# Database
+*.db
+
+# exported file(parquet format)
+*.parquet

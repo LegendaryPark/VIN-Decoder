@@ -40,7 +40,7 @@ async def export_database_cache(websocket: WebSocket):
     parquet_file = open(file_name, 'rb')
     
     await websocket.accept()
-    await websocket.send_bytes(parquet_file)
+    await websocket.send_bytes(parquet_file.read())
     await websocket.close()
     
     
