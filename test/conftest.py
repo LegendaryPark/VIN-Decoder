@@ -4,27 +4,19 @@ from typing import Any
 from typing import Generator
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from server.db_config import engine, Session
 import pytest
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) 
 
 def start_application():
     app = FastAPI()
     app.include_router(vehicle_router)
     return app
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_db.db"
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-
-SessionTesting = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 @pytest.fixture(scope="function")
 def app() -> Generator[FastAPI, Any, None]:
+    
+    # Create a fresh database on each test case.
+    
     Base.metadata.create_all(engine)
     _app = start_application()
     yield _app
@@ -32,10 +24,10 @@ def app() -> Generator[FastAPI, Any, None]:
 
 
 @pytest.fixture(scope="function")
-def db_session(app: FastAPI) -> Generator[SessionTesting, Any, None]:
+def db_session(app: FastAPI) -> Generator[Session, Any, None]:
     connection = engine.connect()
     transaction = connection.begin()
-    session = SessionTesting(bind=connection)
+    session = Session(bind=connection)
     yield session  
     session.close()
     transaction.rollback()
@@ -43,7 +35,7 @@ def db_session(app: FastAPI) -> Generator[SessionTesting, Any, None]:
 
 @pytest.fixture(scope="function")
 def client(
-    app: FastAPI, db_session: SessionTesting
+    app: FastAPI, db_session: Session
 ) -> Generator[TestClient, Any, None]:
 
     def _get_test_db():
