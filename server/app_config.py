@@ -11,6 +11,7 @@ class AppConfig(BaseSettings):
     PROJECT_DESCRIPTION: str = os.getenv("PROJECT_DESCRIPTION")
     SQLITE_DATABASE: str = os.getenv("SQLITE_DATABASE")
     VPIC_DECODE_API: str = os.getenv("VPIC_DECODE_API")
+    TEST_ENV:str = os.getenv("TEST_ENV")
     HOST:str = os.getenv("HOST")
     PORT:int = os.getenv("PORT")
 
