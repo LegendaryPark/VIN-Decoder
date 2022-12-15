@@ -2,10 +2,11 @@ from sqlalchemy.orm import Session
 from server.models.vehicle import Vehicle
 from server.schemas.vehicle_schema import VehicleBase,VehicleAdd, VehicleDelete
 from server.app_config import appConfig
-from server.db_config import engine
 from fastapi import WebSocket
 import requests, json
 import pandas as pd
+import tempfile
+
 
 async def get_vehicle_by_vin(db:Session, vin:str):
     
@@ -19,7 +20,7 @@ async def get_vehicle_by_vin(db:Session, vin:str):
     
     if(fetched_vin_data):
         vehicleAdd = VehicleAdd(vin = vin, 
-                        make = fetched_vin_data['Make'],
+                        make=fetched_vin_data['Make'],
                         model=fetched_vin_data['Model'], 
                         model_year=fetched_vin_data['Model Year'],
                         body_class=fetched_vin_data['Body Class'])
@@ -33,14 +34,14 @@ def delete_vehicle_by_vin(db:Session, vin:str):
     db.commit()
     return VehicleDelete(vin= vin, cached_delete_success= bool(delete_status))
 
-async def export_database_cache(websocket: WebSocket):
-    file_name = 'vehicle.parquet'
+async def export_database_cache(db:Session, websocket: WebSocket):
     
-    __export_sqlite_to_parquet_file(file_name)
+    file_name = f"{tempfile.mkdtemp()}/cached_vehicle.parquet"
+    __export_sqlite_to_parquet_file(file_name, db)
     parquet_file = open(file_name, 'rb')
     
     await websocket.accept()
-    await websocket.send_bytes(parquet_file.read())
+    await websocket.send_bytes(parquet_file)
     await websocket.close()
     
     
@@ -48,8 +49,8 @@ async def export_database_cache(websocket: WebSocket):
     
 async def __get_vehicle_data_from_vpic_api(vin):
     url = f"{appConfig.VPIC_DECODE_API}{vin}?format=json";
-    res = requests.get(url)
-    deserialized_json_data = json.loads(res.text)
+    response = requests.get(url)
+    deserialized_json_data = json.loads(response.text)
     processed_vin_data = VehicleBase.convert_array_to_dictionary(deserialized_json_data['Results'])
     return processed_vin_data
 
@@ -64,6 +65,6 @@ def __add_vehicle_data(db:Session, vehicleAdd:VehicleAdd):
     db.refresh(new_vehicle)
     return new_vehicle
 
-def __export_sqlite_to_parquet_file(file_name:str):
-    dataToParquet = pd.read_sql(f"SELECT * from {Vehicle.__tablename__ }", con=engine)
+def __export_sqlite_to_parquet_file(file_name:str, db:Session):
+    dataToParquet = pd.read_sql(f"SELECT * from {Vehicle.__tablename__ }", db.bind)
     dataToParquet.to_parquet(file_name, index=False)
