@@ -3,3 +3,6 @@
 
 # exported file(parquet format)
 *.parquet
+
+venv/
+.venv
