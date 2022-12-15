@@ -24,9 +24,9 @@ async def delete_vehicle_by_vin(vin:str, db:Session = Depends(get_db)):
                             detail=f"{e}")
 
 @vehicle_router.websocket("/export")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, db:Session = Depends(get_db)):
     try:
-        await vehicle_controller.export_database_cache(websocket)
+        await vehicle_controller.export_database_cache(db=db, websocket=websocket)
     except Exception as e:
         raise HTTPException( status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                             detail=f"{e}")
