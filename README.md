@@ -1,4 +1,4 @@
-# Koffie financial Coding Challenge
+# VIN Decoder
 
 ## Installation
 
