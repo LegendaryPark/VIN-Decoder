@@ -1,4 +1,4 @@
-# VIN Decoder
+# VIN (Vehicle Identification Number) Decoder
 
 ## Installation
 
